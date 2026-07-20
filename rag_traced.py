@@ -1,19 +1,17 @@
 import time
-
+from sqlspan import SQLiteSpanExporter
 from rag_helper import RAGBase
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
 
-
-
 class RAGTraced(RAGBase):
     def __init__(self, index, llm_client, **kwargs):
         self.input_tokens = 0
         provider = TracerProvider()
         provider.add_span_processor(
-            SimpleSpanProcessor(ConsoleSpanExporter())
+            SimpleSpanProcessor(SQLiteSpanExporter("traces.db"))
         )
         trace.set_tracer_provider(provider)
 
