@@ -1,3 +1,5 @@
+import time
+
 from rag_helper import RAGBase
 
 from opentelemetry import trace
@@ -8,6 +10,7 @@ from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProces
 
 class RAGTraced(RAGBase):
     def __init__(self, index, llm_client, **kwargs):
+        self.input_tokens = 0
         provider = TracerProvider()
         provider.add_span_processor(
             SimpleSpanProcessor(ConsoleSpanExporter())
@@ -19,23 +22,35 @@ class RAGTraced(RAGBase):
 
     def search(self, query, num_results=5):
         with self.tracer.start_as_current_span("search") as span:
+            start_ns = time.time_ns()
             search_results = super().search(query, num_results)
-        duration_ms = (span.end_time - span.start_time)
-        span.set_attribute("duration_ms", round(duration_ms, 2))
+            duration_ms = (time.time_ns() - start_ns) / 1e6
+            span.set_attribute("duration_ms", round(duration_ms, 2))
         return search_results
 
 
     def llm(self, prompt):
         with self.tracer.start_as_current_span("llm") as span:
-            response = super().llm(prompt)            
+            start_ns = time.time_ns()
+            response = super().llm(prompt)
             if hasattr(response, 'usage'):
                 usage = response.usage
                 span.set_attribute("input_tokens", usage.input_tokens)
                 span.set_attribute("output_tokens", usage.output_tokens)
-        duration_ms = (span.end_time - span.start_time)
-        span.set_attribute("duration_ms", round(duration_ms, 2))            
+                self.input_tokens = usage.input_tokens
+                
+            duration_ms = (time.time_ns() - start_ns) / 1e6
+            span.set_attribute("duration_ms", round(duration_ms, 2))
         return response
 
 
     def rag(self, query):
-        return super().rag(query)
+        with self.tracer.start_as_current_span("rag") as span:
+            start_ns = time.time_ns()
+            response = super().rag(query)
+            duration_ms = (time.time_ns() - start_ns) / 1e6
+            span.set_attribute("duration_ms", round(duration_ms, 2))
+            return response
+
+    def input_tokens(self):
+        return self.input_tokens

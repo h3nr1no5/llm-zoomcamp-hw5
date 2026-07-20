@@ -1,26 +1,22 @@
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
-
-""" provider = TracerProvider()
-provider.add_span_processor(
-    SimpleSpanProcessor(ConsoleSpanExporter())
-)
-trace.set_tracer_provider(provider)
-
-tracer = trace.get_tracer("llm-zoomcamp")
- """
 from starter import rag
+import math
 
 
-# with tracer.start_as_current_span("my_operation") as span:
-    # your code here
-query = "How does the agentic loop keep calling the model until it stops?"
-response = rag.rag(query)
-answer = response.output_text
-usage = response.usage
-print(answer)
+input_tokens = []
 
-    # span.set_attribute("input_tokens", usage.input_tokens)
-    # span.set_attribute("output_tokens", usage.output_tokens)
+for i in range(4):
+    query = "How does the agentic loop keep calling the model until it stops?"
+    response = rag.rag(query)
+    answer = response.output_text
+    input_tokens.append(rag.input_tokens)
+
+
+print(f"Minimum tokens: {min(input_tokens)}")
+print(f"Maximum tokens: {max(input_tokens)}")
+print(f"Max variance: {max(input_tokens)/min(input_tokens)}")
+
+
+
+
+
 
