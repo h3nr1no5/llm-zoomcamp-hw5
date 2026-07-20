@@ -52,5 +52,3 @@ class RAGTraced(RAGBase):
             span.set_attribute("duration_ms", round(duration_ms, 2))
             return response
 
-    def input_tokens(self):
-        return self.input_tokens
