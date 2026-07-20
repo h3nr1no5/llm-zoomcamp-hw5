@@ -67,4 +67,6 @@ class RAGBase:
         search_results = self.search(query)
         prompt = self.build_prompt(query, search_results)
         response = self.llm(prompt)
-        return response.output_text
+        return response
+
+
